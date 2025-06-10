@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import { DollarSign, Info } from "lucide-react";
 
 type Roadmap = {
@@ -13,10 +12,14 @@ export default function Lend() {
   const [lentTokens, setLentTokens] = useState(1500);
   const [heldTokens, setHeldTokens] = useState(5000);
   const [availableTokens, setAvailableTokens] = useState(3500);
-  const [showWithdrawalWarning, setShowWithdrawalWarning] = useState(false);
+
   const [showLendModal, setShowLendModal] = useState(false);
   const [lendAmount, setLendAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showOverWithdrawModal, setShowOverWithdrawModal] = useState(false);
+  const [showInterestWarningModal, setShowInterestWarningModal] =
+    useState(false);
 
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([
     {
@@ -35,10 +38,14 @@ export default function Lend() {
 
   const handleLendTokens = () => {
     const amount = parseInt(lendAmount);
-    if (amount > 0) {
+    if (amount > availableTokens) {
+      alert("You don't have enough available tokens.");
+      return;
+    }
+
+    if (amount > 0 && amount <= availableTokens) {
       setLentTokens((prev) => prev + amount);
-      setHeldTokens((prev) => prev + amount);
-      setAvailableTokens((prev) => prev + amount);
+      setAvailableTokens((prev) => prev - amount);
       setLendAmount("");
       setShowLendModal(false);
     }
@@ -46,16 +53,9 @@ export default function Lend() {
 
   const handleWithdraw = () => {
     const amount = parseInt(withdrawAmount);
-    if (amount > 0) {
-      if (amount > availableTokens) {
-        setShowWithdrawalWarning(true);
-        return;
-      }
-      setLentTokens((prev) => prev - amount);
-      setHeldTokens((prev) => prev - amount);
-      setAvailableTokens((prev) => prev - amount);
-      setWithdrawAmount("");
-    }
+    setLentTokens((prev) => prev - amount);
+    setAvailableTokens((prev) => prev + amount);
+    setWithdrawAmount("");
   };
 
   return (
@@ -74,10 +74,6 @@ export default function Lend() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white rounded-2xl shadow-md border border-[#E5E7EB] p-4">
-          <h2 className="text-gray-500 text-sm mb-1">PLASTIK Lent</h2>
-          <p className="text-2xl font-bold">{lentTokens.toLocaleString()}</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow-md border border-[#E5E7EB] p-4">
           <h2 className="text-gray-500 text-sm mb-1">PLASTIK Held</h2>
           <p className="text-2xl font-bold">{heldTokens.toLocaleString()}</p>
         </div>
@@ -87,9 +83,14 @@ export default function Lend() {
             {availableTokens.toLocaleString()}
           </p>
         </div>
+        <div className="bg-white rounded-2xl shadow-md border border-[#E5E7EB] p-4">
+          <h2 className="text-gray-500 text-sm mb-1">PLASTIK Lent</h2>
+          <p className="text-2xl font-bold">{lentTokens.toLocaleString()}</p>
+        </div>
+
         <div className="bg-white rounded-2xl shadow-md border border-[#E5E7EB] p-4 flex items-center justify-center">
           <button
-            onClick={() => console.log("send stablecoins")}
+            onClick={() => setShowWithdrawModal(true)}
             className="bg-[#082FB9] hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-full transition"
           >
             Withdraw
@@ -97,7 +98,7 @@ export default function Lend() {
         </div>
       </div>
 
-      {/* Roadmap Allocation Table */}
+      {/* Roadmap Table */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="p-6 border-b">
           <h2 className="text-lg font-semibold">Active Allocations</h2>
@@ -155,10 +156,10 @@ export default function Lend() {
         </div>
       </div>
 
-      {/* Lend Tokens Modal */}
+      {/* Lend Modal */}
       {showLendModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 backdrop-blur-md bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-md">
             <h3 className="text-lg font-semibold mb-4">Lend PLASTIK Tokens</h3>
             <input
               type="number"
@@ -185,8 +186,53 @@ export default function Lend() {
         </div>
       )}
 
-      {/* Withdrawal Warning Modal */}
-      {showWithdrawalWarning && (
+      {/* Withdraw Modal */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 backdrop-blur-md bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-md">
+            <h3 className="text-lg font-semibold mb-4">
+              Withdraw PLASTIK Tokens
+            </h3>
+            <input
+              type="number"
+              value={withdrawAmount}
+              onChange={(e) => setWithdrawAmount(e.target.value)}
+              placeholder="Enter amount to withdraw"
+              className="w-full p-3 border rounded-lg mb-4"
+            />
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setWithdrawAmount("");
+                  setShowWithdrawModal(false);
+                }}
+                className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const amount = parseInt(withdrawAmount);
+                  if (isNaN(amount) || amount <= 0) return;
+                  if (amount > lentTokens) {
+                    setShowWithdrawModal(false);
+                    setShowOverWithdrawModal(true);
+                  } else {
+                    setShowWithdrawModal(false);
+                    setShowInterestWarningModal(true);
+                  }
+                }}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Interest Warning Modal */}
+      {showInterestWarningModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
             <div className="flex items-center mb-4">
@@ -199,7 +245,7 @@ export default function Lend() {
             </p>
             <div className="flex gap-4">
               <button
-                onClick={() => setShowWithdrawalWarning(false)}
+                onClick={() => setShowInterestWarningModal(false)}
                 className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
               >
                 Cancel
@@ -207,7 +253,7 @@ export default function Lend() {
               <button
                 onClick={() => {
                   handleWithdraw();
-                  setShowWithdrawalWarning(false);
+                  setShowInterestWarningModal(false);
                 }}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >
@@ -218,8 +264,33 @@ export default function Lend() {
         </div>
       )}
 
+      {/* Over Withdraw Modal */}
+      {showOverWithdrawModal && (
+        <div className="fixed inset-0 backdrop-blur-md bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-md">
+            <div className="flex items-center mb-4">
+              <Info className="w-6 h-6 text-red-500 mr-2" />
+              <h3 className="text-lg font-semibold text-red-600">
+                Withdrawal Error
+              </h3>
+            </div>
+            <p className="text-gray-700 mb-6">
+              The Entered amount exceeds your available token balance.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowOverWithdrawModal(false)}
+                className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Floating Lending Button */}
-      <div className="flex justify-center">
+      <div className="flex justify-center mt-5">
         <button
           className="bg-[#082FB9] hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-full transition mt-2"
           onClick={() => setShowLendModal(true)}
