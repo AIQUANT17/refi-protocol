@@ -20,6 +20,7 @@ export default function Lend() {
   const [showOverWithdrawModal, setShowOverWithdrawModal] = useState(false);
   const [showInterestWarningModal, setShowInterestWarningModal] =
     useState(false);
+  const [showOverLendModal, setShowOverLendModal] = useState(false);
 
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([
     {
@@ -38,17 +39,18 @@ export default function Lend() {
 
   const handleLendTokens = () => {
     const amount = parseInt(lendAmount);
+    if (isNaN(amount) || amount <= 0) return;
+
     if (amount > availableTokens) {
-      alert("You don't have enough available tokens.");
+      setShowLendModal(false);
+      setShowOverLendModal(true); // trigger the warning modal
       return;
     }
 
-    if (amount > 0 && amount <= availableTokens) {
-      setLentTokens((prev) => prev + amount);
-      setAvailableTokens((prev) => prev - amount);
-      setLendAmount("");
-      setShowLendModal(false);
-    }
+    setLentTokens((prev) => prev + amount);
+    setAvailableTokens((prev) => prev - amount);
+    setLendAmount("");
+    setShowLendModal(false);
   };
 
   const handleWithdraw = () => {
@@ -78,14 +80,14 @@ export default function Lend() {
           <p className="text-2xl font-bold">{heldTokens.toLocaleString()}</p>
         </div>
         <div className="bg-white rounded-2xl shadow-md border border-[#E5E7EB] p-4">
-          <h2 className="text-gray-500 text-sm mb-1">Available</h2>
-          <p className="text-2xl font-bold">
-            {availableTokens.toLocaleString()}
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl shadow-md border border-[#E5E7EB] p-4">
           <h2 className="text-gray-500 text-sm mb-1">PLASTIK Lent</h2>
           <p className="text-2xl font-bold">{lentTokens.toLocaleString()}</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow-md border border-[#E5E7EB] p-4">
+          <h2 className="text-gray-500 text-sm mb-1">Available</h2>
+          <p className="text-2xl font-bold">
+            {(heldTokens - lentTokens).toLocaleString()}
+          </p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-md border border-[#E5E7EB] p-4 flex items-center justify-center">
@@ -185,6 +187,30 @@ export default function Lend() {
           </div>
         </div>
       )}
+      {/* Over Lend Modal */}
+      {showOverLendModal && (
+        <div className="fixed inset-0 backdrop-blur-md bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-md">
+            <div className="flex items-center mb-4">
+              <Info className="w-6 h-6 text-red-500 mr-2" />
+              <h3 className="text-lg font-semibold text-red-600">
+                Lending Error
+              </h3>
+            </div>
+            <p className="text-gray-700 mb-6">
+              The amount you entered exceeds your available tokens.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowOverLendModal(false)}
+                className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Withdraw Modal */}
       {showWithdrawModal && (
@@ -233,8 +259,8 @@ export default function Lend() {
 
       {/* Interest Warning Modal */}
       {showInterestWarningModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 backdrop-blur-md  bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-md">
             <div className="flex items-center mb-4">
               <Info className="w-6 h-6 text-yellow-500 mr-2" />
               <h3 className="text-lg font-semibold">Withdrawal Warning</h3>
