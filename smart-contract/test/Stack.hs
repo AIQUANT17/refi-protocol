@@ -35,6 +35,7 @@ updatedDatumPT = initialDatum {SR.totalPT = 12000}
 
 updatedDatumReward = initialDatum {SR.totalReward = 6000}
 
+-- an unauthorized user (a lender pretending to be an admin) tries to perform admin-only actions
 invalidDatum = initialDatum {SR.adminsPkh = [lender1]}
 
 -- Wrap datum into OutputDatum
@@ -73,7 +74,7 @@ mkContinuingOutput dat =
       txOutReferenceScript = Nothing
     }
 
--- 👇 Mock validator simulating business logic off-chain for test purposes
+--  Mock validator simulating business logic off-chain for test purposes
 mockValidator :: SR.LenderDatum -> SR.LenderAction -> ScriptContext -> Bool
 mockValidator oldDatum action ctx =
   case action of
@@ -81,7 +82,7 @@ mockValidator oldDatum action ctx =
       let newDatum = extractDatumFromCtx ctx
        in SR.adminsPkh newDatum == SR.adminsPkh oldDatum
     SR.Withdraw amt ->
-      amt > 0
+      amt > 0 && amt <= getLenderPT lender1 oldDatum
     SR.Redeem ->
       let outs = txInfoOutputs (scriptContextTxInfo ctx)
        in case outs of
@@ -91,6 +92,18 @@ mockValidator oldDatum action ctx =
                 Just newDatum -> SR.totalReward newDatum <= SR.totalReward oldDatum
                 _ -> False
             _ -> False
+    -- SR.Redeem ->
+    --   let outs = txInfoOutputs (scriptContextTxInfo ctx)
+    --    in case outs of
+    --         [] -> False -- disallow full redeem now (optional)
+    --         [TxOut {txOutDatum = OutputDatum (Datum d)}] ->
+    --           case fromBuiltinData d of
+    --             Just newDatum ->
+    --               let oldReward = getLenderReward lender1 oldDatum
+    --                   newReward = getLenderReward lender1 newDatum
+    --                in newReward <= oldReward
+    --             _ -> False
+    --         _ -> False
     SR.FundPlastikToEscrow _ ->
       admin1 `elem` txInfoSignatories (scriptContextTxInfo ctx)
     SR.FundUSDM _ ->
@@ -106,7 +119,13 @@ mockValidator oldDatum action ctx =
                 _ -> error "Invalid datum in output"
             _ -> oldDatum
 
--- 🔬 Tests
+    getLenderPT :: PubKeyHash -> SR.LenderDatum -> Integer
+    getLenderPT pkh datum =
+      case lookup pkh (SR.lenders datum) of
+        Just (pt, _) -> pt
+        Nothing -> 0
+
+--  Tests
 tests :: TestTree
 tests =
   testGroup
@@ -127,7 +146,10 @@ tests =
               mockValidator initialDatum (SR.Withdraw 1000) (mkCtx True [mkContinuingOutput updatedDatumPT]),
           testCase "Invalid withdraw amount (0)" $
             assertBool "Should fail" $
-              not (mockValidator initialDatum (SR.Withdraw 0) (mkCtx True [mkContinuingOutput updatedDatumPT]))
+              not (mockValidator initialDatum (SR.Withdraw 0) (mkCtx True [mkContinuingOutput updatedDatumPT])),
+          testCase "Invalid withdraw amount (more than lended)" $
+            assertBool "Should fail" $
+              not (mockValidator initialDatum (SR.Withdraw 6000) (mkCtx True [mkContinuingOutput updatedDatumPT]))
         ],
       testGroup
         "Redeem"

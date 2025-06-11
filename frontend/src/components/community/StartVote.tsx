@@ -66,7 +66,7 @@ const StartVote = ({
         <p className="text-right">89,425 votes</p>
         <div className="bg-gray-300 h-2 rounded-full mb-2">
           <div
-            className="bg-black h-2 rounded-full"
+            className="bg-[#082FB9] h-2 rounded-full"
             style={{ width: `${oldRetirementPercentage}%` }}
           ></div>
         </div>
@@ -84,7 +84,7 @@ const StartVote = ({
           <input
             type="radio"
             name="vote"
-            className="mr-2 w-5 h-5 appearance-none border border-gray-500 rounded-full checked:bg-black checked:border-black relative before:content-[''] before:absolute before:inset-[-4px] before:border-2 before:border-gray-500 before:rounded-full before:scale-0 checked:before:scale-100 transition-all"
+            className="mr-2 w-5 h-5 appearance-none border border-gray-500 rounded-full checked:bg-[#082FB9]  relative before:content-[''] before:absolute before:inset-[-4px] before:border-2 before:border-gray-500 before:rounded-full before:scale-0 checked:before:scale-100 transition-all"
             checked={selectedOption === "new"}
             onChange={() => {
               setSelectedOption("new");
@@ -96,20 +96,19 @@ const StartVote = ({
         <p className="text-right">67,317 votes</p>
         <div className="bg-gray-300 h-2 rounded-full mb-2">
           <div
-            className="bg-black h-2 rounded-full"
+            className="bg-[#082FB9] h-2 rounded-full"
             style={{ width: `${newRetirementPercentage}%` }}
             role="progressbar"
           ></div>
         </div>
       </div>
-
+      <p className="text-sm text-gray-500 mt-2 text-start">
+        *You must hold at least 250,000 PLASTIK tokens to be eligible to vote.
+      </p>
       {/* Cast Vote Button */}
-      <Button variant="dark" className="w-full" onClick={castVote}>
+      <Button variant="dark" className="w-[10%] m-auto" onClick={castVote}>
         Cast Your Vote
       </Button>
-      <p className="text-sm text-gray-500 mt-2 text-center">
-        You must hold at least 1000 PLASTIK tokens to be eligible to vote.
-      </p>
     </div>
   );
 };
