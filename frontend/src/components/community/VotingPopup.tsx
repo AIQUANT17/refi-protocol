@@ -60,12 +60,16 @@ const VotingPopup = ({
         <div className="flex justify-end gap-3 mt-6">
           <Button
             variant="userButton"
-            className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md text-lg"
+            className="bg-white text-gray-800 px-4 py-2 rounded-3xl text-lg border border-[#D4D9D8]"
             onClick={onClose}
           >
             Cancel
           </Button>
-          <Button variant="dark" onClick={onStartVoting}>
+          <Button
+            variant="userButton"
+            className="bg-[#082FB9] rounded-3xl text-white font-semibold"
+            onClick={onStartVoting}
+          >
             Create Voting Round
           </Button>
         </div>

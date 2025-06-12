@@ -29,13 +29,13 @@ const StartVote = ({
     <div className="bg-white p-4 rounded-lg border border-gray-200">
       <div className="flex justify-between">
         <h2 className="text-2xl font-semibold">Token Retirement Rate Vote</h2>
-        <Button
+        {/* <Button
           icon={eligibleforVoting ? faCircleCheck : undefined}
           variant="userButton"
           className="bg-gray-900 text-white rounded-full"
         >
           {eligibleforVoting ? "Eligible to Vote" : "Not Eligible to Vote"}
-        </Button>
+        </Button> */}
       </div>
       <p className="mb-4 text-sm text-gray-500">
         Cast your vote to determine the percentage of tokens to be retired from
@@ -54,7 +54,7 @@ const StartVote = ({
           <input
             type="radio"
             name="vote"
-            className="mr-2 w-5 h-5 appearance-none border border-gray-500 rounded-full checked:bg-black checked:border-black relative before:content-[''] before:absolute before:inset-[-4px] before:border-2 before:border-gray-500 before:rounded-full before:scale-0 checked:before:scale-100 transition-all"
+            className="mr-2 w-5 h-5 appearance-none border border-gray-500 rounded-full checked:bg-[#082FB9]  relative before:content-[''] before:absolute before:inset-[-4px] before:border-2 before:border-gray-500 before:rounded-full before:scale-0 checked:before:scale-100 transition-all"
             checked={selectedOption === "old"}
             onChange={() => {
               setSelectedOption("old");
@@ -106,7 +106,11 @@ const StartVote = ({
         *You must hold at least 250,000 PLASTIK tokens to be eligible to vote.
       </p>
       {/* Cast Vote Button */}
-      <Button variant="dark" className="w-[10%] m-auto" onClick={castVote}>
+      <Button
+        variant="userButton"
+        className="w-[10%] m-auto bg-[#082FB9] rounded-3xl text-white font-semibold"
+        onClick={castVote}
+      >
         Cast Your Vote
       </Button>
     </div>
